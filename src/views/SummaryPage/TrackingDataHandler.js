@@ -8,12 +8,12 @@ export const TrackingDataHandler = () => {
    
     const {tradingData, setTradingData} = useTrackingDataContext();
     return checkTradingHours() ? (
-      <div class="h-100 d-flex flex-column">
-        <div class="mt-4 mb-0">
+      <div className="h-100 d-flex flex-column">
+        <div className="mt-4 mb-0">
           <h3>Summary</h3>
         </div>
         {tradingData?.Accounts?.map((tradingAccItem, i) => (
-          <div class="row mx-0 py-2">
+          <div key={tradingAccItem?.AccountId ?? i} className="row mx-0 py-2">
             <Card
               className="col TradingMetric"
               sx={{ height: 40, boxShadow: "none" }}
@@ -61,7 +61,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.AccountId}
+                  {tradingAccItem.AccountId ?? ""}
                 </Typography>
               </CardContent>
             </Card>
@@ -88,7 +88,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.CurrentLimit.toLocaleString("ru-RU", {
+                  {(tradingAccItem.CurrentLimit ?? 0).toLocaleString("ru-RU", {
                     style: "currency",
                     currency: "RUB",
                   })}
@@ -118,7 +118,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.FreeMargin.toLocaleString("ru-RU", {
+                  {(tradingAccItem.FreeMargin ?? 0).toLocaleString("ru-RU", {
                     style: "currency",
                     currency: "RUB",
                   })}
@@ -147,7 +147,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.UsedMargin.toLocaleString("ru-RU", {
+                  {(tradingAccItem.UsedMargin ?? 0).toLocaleString("ru-RU", {
                     style: "currency",
                     currency: "RUB",
                   })}
@@ -176,7 +176,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.TotalCommission.toLocaleString("ru-RU", {
+                  {(tradingAccItem.TotalCommission ?? 0).toLocaleString("ru-RU", {
                     style: "currency",
                     currency: "RUB",
                   })}
@@ -205,7 +205,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.TotalVarMarginInPercent + " %"}
+                  {(tradingAccItem.TotalVarMarginInPercent ?? 0) + " %"}
                 </Typography>
               </CardContent>
             </Card>
@@ -231,7 +231,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.TotalVarMarginInCash.toLocaleString("ru-RU", {
+                  {(tradingAccItem.TotalVarMarginInCash ?? 0).toLocaleString("ru-RU", {
                     style: "currency",
                     currency: "RUB",
                   })}
@@ -260,7 +260,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.TotalAccruedMarginInPercent + " %"}
+                  {(tradingAccItem.TotalAccruedMarginInPercent ?? 0) + " %"}
                 </Typography>
               </CardContent>
             </Card>
@@ -286,7 +286,7 @@ export const TrackingDataHandler = () => {
                   className="col text-end"
                   fontFamily="inherit"
                 >
-                  {tradingAccItem.TotalAccruedMarginInCash.toLocaleString(
+                  {(tradingAccItem.TotalAccruedMarginInCash ?? 0).toLocaleString(
                     "ru-RU",
                     { style: "currency", currency: "RUB" }
                   )}
@@ -306,7 +306,7 @@ export const TrackingDataHandler = () => {
       </div>
     ) : (
       <div
-        class="w-100 h-100 m-0 d-flex flex-column"
+        className="w-100 h-100 m-0 d-flex flex-column"
         role="alert"
         style={{
           alignItems: "center",
@@ -335,10 +335,13 @@ export const TrackingDataHandler = () => {
   function checkTradingHours()
   {
     var d = new Date();
-    var day = d.getDay();
+    var day = d.getDay(); // 0 = Sun, 1 = Mon, ..., 5 = Fri, 6 = Sat
     var h = d.getHours();
     var m = d.getMinutes();
-    return day <= 5 && ((h === 9 && m >= 50) || h > 9);
+    var isWeekday = day >= 1 && day <= 5; // Mon-Fri
+    var afterStart = (h === 9 && m >= 50) || h > 9;
+    var beforeEnd = h < 23 || (h === 23 && m <= 50);
+    return isWeekday && afterStart && beforeEnd;
   }
   
   function checkTradingDataItem(tradingData, item, nullValue = "")

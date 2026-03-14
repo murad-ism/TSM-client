@@ -6,34 +6,32 @@ const TrackingDataContext = createContext([]);
 
 export const TrackingDataProvider = ({ children }) => {
   const [tradingData, setTradingData] = useState();
-  const tradingDataRef = useRef(tradingData);
   const hubConnection = useRef(null);
 
   useEffect(() => {
-    return () => {
-      if (!tradingDataRef.current) {
-        hubConnection.current = null;
-      }
-    };
-  }, []);
-
-  if (!hubConnection.current) {
-    hubConnection.current = new HubConnectionBuilder()
+    const connection = new HubConnectionBuilder()
       .withUrl(`${appConfig.TradingDataApiHost}/tradingDataMonitoring`)
       .build();
 
-    hubConnection.current.on("NewTrackingData", function (data) {
+    connection.on("NewTrackingData", function (data) {
       setTradingData(JSON.parse(data));
     });
 
-    hubConnection.current.start().then(() => {
-      hubConnection.current
+    connection.start().then(() => {
+      connection
         .invoke("SubscribeOnData")
         .catch(function (err) {
           return console.error(err.toString());
         });
     });
-  }
+
+    hubConnection.current = connection;
+
+    return () => {
+      connection.stop().catch(() => {});
+      hubConnection.current = null;
+    };
+  }, []);
 
   return (
     <TrackingDataContext.Provider value={{ tradingData, setTradingData }}>

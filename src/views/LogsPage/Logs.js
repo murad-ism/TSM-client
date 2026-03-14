@@ -21,12 +21,10 @@ export const LogsPage = () => {
   currentDate.setHours(0, 0, 0, 0);
 
   const getLocalDate = useCallback((date) => {
-    let hoursDiff = date.getHours() - date.getTimezoneOffset() / 60;
-    let minutesDiff = (date.getHours() - date.getTimezoneOffset()) % 60;
-    date.setHours(hoursDiff);
-    date.setMinutes(minutesDiff);
-    return date;
-  });
+    const d = new Date(date.getTime());
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   const logsFiltersRef = useRef({
     systemId: null,
@@ -58,7 +56,8 @@ export const LogsPage = () => {
 
   const getLogs = useCallback(async () => {
     setLoading(true);
-    const response = await fetch(
+    try {
+      const response = await fetch(
       `${appConfig.TradingDataApiHost}/TradingData/LogRecords`,
       {
         method: "POST",
@@ -71,9 +70,13 @@ export const LogsPage = () => {
         }),
       }
     );
-    const newData = await response.json();
-    setLogs(newData);
-    setLoading(false);
+      const newData = await response.json();
+      setLogs(newData);
+    } catch {
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const getSystems = useCallback(async () => {
@@ -84,8 +87,8 @@ export const LogsPage = () => {
       }
     );
     const secs = await response.json();
-    setSystems(secs, []);
-  });
+    setSystems(Array.isArray(secs) ? secs : []);
+  }, []);
 
   useEffect(() => {
     getLogs();
@@ -181,7 +184,7 @@ export const LogsPage = () => {
 
       <div className="my-1 h-100" style={{ overflow: "auto" }}>
         {loading ? (
-          <div class="w-100 h-100">
+          <div className="w-100 h-100">
             <CircularProgress
               style={{ position: "relative", left: "50%", top: "50%" }}
             />
@@ -233,7 +236,7 @@ export const LogsPage = () => {
           </List>
         ) : (
           <div
-            class="w-100 h-100 m-0 d-flex"
+            className="w-100 h-100 m-0 d-flex"
             role="alert"
             style={{
               alignItems: "center",
@@ -242,7 +245,7 @@ export const LogsPage = () => {
               color: "gray",
             }}
           >
-            <h5>Нет записей в логе за выбраный день.</h5>
+            <h5>Нет записей в логе за выбранный день.</h5>
           </div>
         )}
       </div>

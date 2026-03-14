@@ -55,56 +55,64 @@ export const TradesPage = () => {
   });
 
   const setPaginationModel = useCallback((pg) => {
-    pageIndexRef.current = pg.Page;
-    pageSizeRef.current = pg.PageSize;
+    pageIndexRef.current = pg.page;
+    pageSizeRef.current = pg.pageSize;
     getTrades();
-  });
+  }, []);
 
   const getTradesCount = useCallback(async () => {
-    const response = await fetch(
-      `${appConfig.TradingDataApiHost}/TradingData/TradesCount`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          SystemId: tradesFilters.systemId,
-          SecurityId: tradesFilters.securityId,
-          DateFrom: tradesFilters.dateFrom,
-          DateTo: tradesFilters.dateTo,
-          PageIndex: pageIndexRef.current,
-          PageSize: pageSizeRef.current,
-        }),
-      }
-    );
-
-    const count = await response.json();
-    setTradesCount(count);
+    try {
+      const response = await fetch(
+        `${appConfig.TradingDataApiHost}/TradingData/TradesCount`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            SystemId: tradesFilters.systemId,
+            SecurityId: tradesFilters.securityId,
+            DateFrom: tradesFilters.dateFrom,
+            DateTo: tradesFilters.dateTo,
+            PageIndex: pageIndexRef.current,
+            PageSize: pageSizeRef.current,
+          }),
+        }
+      );
+      const count = await response.json();
+      setTradesCount(count);
+    } catch {
+      setTradesCount(0);
+    }
   }, []);
 
   const getTrades = useCallback(async () => {
     setLoading(true);
-    const response = await fetch(
-      `${appConfig.TradingDataApiHost}/TradingData/Trades`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          SystemId: tradesFilters.systemId,
-          SecurityId: tradesFilters.securityId,
-          DateFrom: tradesFilters.dateFrom,
-          DateTo: tradesFilters.dateTo,
-          PageIndex: pageIndexRef.current,
-          PageSize: pageSizeRef.current,
-        }),
-      }
-    );
-    const newData = await response.json();
-    setTradesData(newData);
-    setLoading(false);
+    try {
+      const response = await fetch(
+        `${appConfig.TradingDataApiHost}/TradingData/Trades`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            SystemId: tradesFilters.systemId,
+            SecurityId: tradesFilters.securityId,
+            DateFrom: tradesFilters.dateFrom,
+            DateTo: tradesFilters.dateTo,
+            PageIndex: pageIndexRef.current,
+            PageSize: pageSizeRef.current,
+          }),
+        }
+      );
+      const newData = await response.json();
+      setTradesData(newData);
+    } catch (err) {
+      setTradesData([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const getSecurities = useCallback(async () => {
@@ -134,8 +142,8 @@ export const TradesPage = () => {
       }
     );
     const secs = await response.json();
-    setSystems(secs, []);
-  });
+    setSystems(Array.isArray(secs) ? secs : []);
+  }, []);
 
   useEffect(() => {
     getTradesCount();
@@ -408,6 +416,7 @@ export const TradesPage = () => {
           height="100%"
           rows={checkTradesData(tradesData) ? tradesData : []}
           columns={columns}
+          paginationMode="server"
           rowCount={tradesCount}
           getRowId={(row) => row.id}
           loading={loading}

@@ -18,41 +18,41 @@ import { ruRU } from '@mui/x-date-pickers/locales';
 function App() {
   return (
     <BrowserRouter>
-      <div class="App-header">
-        <nav class="navbar navbar-expand-md navbar-dark">
-          <div class="container">
-            <a class="navbar-brand text-light pt-0" href="/">
+      <div className="App-header">
+        <nav className="navbar navbar-expand-md navbar-dark">
+          <div className="container">
+            <a className="navbar-brand text-light pt-0" href="/">
               Trading systems monitor
             </a>
             <button
-              class="navbar-toggler ml-auto custom-toggler"
+              className="navbar-toggler ml-auto custom-toggler"
               type="button"
-              data-toggle="collapse"
-              data-target="#navbarSupportedContent"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent"
               aria-controls="navbarSupportedContent"
               aria-expanded="false"
               aria-label="Toggle navigation"
             >
-              <span class="navbar-toggler-icon" />
+              <span className="navbar-toggler-icon" />
             </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-              <ul class="navbar-nav ms-auto mx-3">
-                <li class="nav-item active">
+            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+              <ul className="navbar-nav ms-auto mx-3">
+                <li className="nav-item active">
                   <Link
-                    class="nav-link active text-light"
+                    className="nav-link active text-light"
                     aria-current="page"
                     to="/"
                   >
                     Summary
                   </Link>
                 </li>
-                <li class="nav-item">
-                  <Link class="nav-link text-light" to="/Trades">
+                <li className="nav-item">
+                  <Link className="nav-link text-light" to="/Trades">
                     Trades
                   </Link>
                 </li>
-                <li class="nav-item">
-                  <Link class="nav-link text-light" to="/Logs">
+                <li className="nav-item">
+                  <Link className="nav-link text-light" to="/Logs">
                     Logs
                   </Link>
                 </li>
@@ -62,7 +62,7 @@ function App() {
         </nav>
       </div>
 
-      <div class="App container body-content" style={{ minHeight: "0" }}>
+      <div className="App container body-content" style={{ minHeight: "0" }}>
         <LocalizationProvider
           dateAdapter={AdapterDayjs}
           adapterLocale="ru"
@@ -72,7 +72,6 @@ function App() {
         >
           <Routes>
             <Route
-              exact
               path="/"
               element={
                 <TrackingDataProvider>
@@ -89,4 +88,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

@@ -9,25 +9,25 @@ export const TrackingDataPositions = () =>
     const columns = [
       {
         field: "Ticker",
-        valueGetter: (dt) => dt.row.Security.Ticker,
+        valueGetter: (dt) => dt.row.Security?.Ticker ?? "",
         headerName: "Security",
         flex: 1,
       },
       {
         field: "Position",
-        valueGetter: (dt) => dt.row.Position.Total,
+        valueGetter: (dt) => dt.row.Position?.Total ?? "",
         headerName: "Position",
         flex: 1
       },
       {
         field: "Price",
-        valueGetter: (dt) => dt.row.Position.AvgPrice,
+        valueGetter: (dt) => dt.row.Position?.AvgPrice ?? "",
         headerName: "Price",
         flex: 1
       },
       {
         field: "PLCur",
-        valueGetter: (dt) => dt.row.VarMarginInCash,
+        valueGetter: (dt) => dt.row.VarMarginInCash ?? "",
         headerName: "P/L (₽)",
         flex: 1,
         cellClassName: (params) => {
@@ -44,7 +44,7 @@ export const TrackingDataPositions = () =>
       },
       {
         field: "PLPer",
-        valueGetter: (dt) => dt.row.VarMarginInPercent,
+        valueGetter: (dt) => dt.row.VarMarginInPercent ?? "",
         headerName: "P/L (%)",
         flex: 1,
         cellClassName: (params) => {
@@ -71,7 +71,7 @@ export const TrackingDataPositions = () =>
           columns={columns}
           hideFooter
           autoHeight
-          getRowId={(row) => row.Security.Ticker}
+          getRowId={(row) => row.Security?.Ticker ?? ""}
           loading={!checkTradingData(tradingData)}
           disableColumnResize
           sx={{
