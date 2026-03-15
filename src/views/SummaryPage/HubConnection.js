@@ -1,6 +1,6 @@
 import { useState, createContext, useContext, useRef, useEffect } from "react";
 import { HubConnectionBuilder } from "@microsoft/signalr";
-import { appConfig } from "../../Config";
+import { getSignalRHubUrl } from "../../api/tradingDataApi";
 
 const TrackingDataContext = createContext([]);
 
@@ -10,7 +10,7 @@ export const TrackingDataProvider = ({ children }) => {
 
   useEffect(() => {
     const connection = new HubConnectionBuilder()
-      .withUrl(`${appConfig.TradingDataApiHost}/tradingDataMonitoring`)
+      .withUrl(getSignalRHubUrl())
       .build();
 
     connection.on("NewTrackingData", function (data) {

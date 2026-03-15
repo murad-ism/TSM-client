@@ -2,10 +2,11 @@ import { DataGrid } from '@mui/x-data-grid';
 import { useTrackingDataContext } from "./HubConnection";
 import { blue } from '@mui/material/colors';
 import clsx from 'clsx';
+import { hasValidTrackingData } from "../../utils/trackingData";
+import { currencyComparator } from "../../utils/comparators";
 
-export const TrackingDataPositions = () => 
-{
-    const {tradingData, setTradingData} = useTrackingDataContext();
+export const TrackingDataPositions = () => {
+    const { tradingData } = useTrackingDataContext();
     const columns = [
       {
         field: "Ticker",
@@ -64,7 +65,7 @@ export const TrackingDataPositions = () =>
       return (
         <DataGrid
           rows={
-            checkTradingData(tradingData)
+            hasValidTrackingData(tradingData)
               ? tradingData.Accounts[0].Securities
               : []
           }
@@ -72,7 +73,7 @@ export const TrackingDataPositions = () =>
           hideFooter
           autoHeight
           getRowId={(row) => row.Security?.Ticker ?? ""}
-          loading={!checkTradingData(tradingData)}
+          loading={!hasValidTrackingData(tradingData)}
           disableColumnResize
           sx={{
             fontFamily: "var(--bs-font-sans-serif)",
@@ -102,16 +103,3 @@ export const TrackingDataPositions = () =>
           }}
         />);
 }
-
-function checkTradingData(tradingData)
-{
-    return tradingData && Array.isArray(tradingData.Accounts) &&
-           tradingData.Accounts.length;
-}
-
-const currencyComparator = (v1, v2) => 
-{
-  let val1 = parseFloat(v1);
-  let val2 = parseFloat(v2);
-  return val1 - val2;
-};

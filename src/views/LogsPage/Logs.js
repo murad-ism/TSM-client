@@ -2,11 +2,11 @@ import { React, useEffect, useState, useCallback, useRef } from "react";
 import { DatePicker } from "@mui/x-date-pickers";
 import { Autocomplete } from "@mui/material";
 import { TextField } from "@mui/material";
-import { green, yellow, blue, red } from "@mui/material/colors";
 import { CircularProgress } from "@mui/material";
 import { IconButton } from "@mui/material";
-import { appConfig } from "../../Config";
 import List from "@mui/material/List";
+import { getLogRecords, getSystemIds } from "../../api/tradingDataApi";
+import { getLogLevelColor } from "../../utils/logLevelColors";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
@@ -33,68 +33,44 @@ export const LogsPage = () => {
   });
   
   const logsFilters = logsFiltersRef.current;
+
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    const data = await getLogRecords({
+      systemId: logsFiltersRef.current.systemId,
+      dateValue: logsFiltersRef.current.dateValue,
+    });
+    setLogs(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }, []);
+
   const updateDate = useCallback((e) => {
-    logsFilters.date = e;
+    logsFiltersRef.current.date = e;
     if (e) {
-      let date = logsFilters.date.toDate();
-      logsFilters.dateValue = getLocalDate(date);
+      const date = logsFiltersRef.current.date.toDate?.();
+      logsFiltersRef.current.dateValue = getLocalDate(date || logsFiltersRef.current.date);
     } else {
-      logsFilters.dateValue = null;
+      logsFiltersRef.current.dateValue = null;
     }
-    getLogs();
-  });
+    fetchLogs();
+  }, [fetchLogs]);
+
+  const updateSystem = useCallback((e, v) => {
+    logsFiltersRef.current.systemId = v ?? null;
+    fetchLogs();
+  }, [fetchLogs]);
 
   function clearDate(e) {
     e.stopPropagation();
     updateDate(null);
   }
 
-  const updateSystem = useCallback((e, v) => {
-    logsFilters.systemId = v ? v : null;
-    getLogs();
-  });
-
-  const getLogs = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-      `${appConfig.TradingDataApiHost}/TradingData/LogRecords`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          SystemId: logsFilters.systemId,
-          Date: logsFilters.dateValue,
-        }),
-      }
-    );
-      const newData = await response.json();
-      setLogs(newData);
-    } catch {
-      setLogs([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const getSystems = useCallback(async () => {
-    const response = await fetch(
-      `${appConfig.TradingDataApiHost}/TradingData/Trades/SystemIds`,
-      {
-        method: "GET",
-      }
-    );
-    const secs = await response.json();
-    setSystems(Array.isArray(secs) ? secs : []);
-  }, []);
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
   useEffect(() => {
-    getLogs();
-  }, []);
-  useEffect(() => {
-    getSystems();
+    getSystemIds().then(setSystems);
   }, []);
 
   return (
@@ -202,7 +178,7 @@ export const LogsPage = () => {
                     {
                       <div
                         style={{
-                          background: getColorForLogRec(item.level),
+                          background: getLogLevelColor(item.level),
                           padding: "0.25rem",
                           border: "1px solid",
                           borderRadius: "0.25rem",
@@ -255,17 +231,4 @@ export const LogsPage = () => {
 
 function checkLogsData(logs) {
   return logs && logs.length;
-}
-
-function getColorForLogRec(levelId) {
-  switch (levelId) {
-    case "Info":
-      return blue[400];
-    case "Warn":
-      return yellow[400];
-    case "Error":
-      return red[400];
-    default:
-      return green[400];
-  }
 }

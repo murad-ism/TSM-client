@@ -9,6 +9,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { React } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { Routes } from "./constants/routes";
 import { TradesPage } from "./views/TradesPage/Trades";
 import { LogsPage } from "./views/LogsPage/Logs";
 import { TrackingDataProvider } from "./views/SummaryPage/HubConnection";
@@ -41,18 +42,18 @@ function App() {
                   <Link
                     className="nav-link active text-light"
                     aria-current="page"
-                    to="/"
+                    to={Routes.Summary}
                   >
                     Summary
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link text-light" to="/Trades">
+                  <Link className="nav-link text-light" to={Routes.Trades}>
                     Trades
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link text-light" to="/Logs">
+                  <Link className="nav-link text-light" to={Routes.Logs}>
                     Logs
                   </Link>
                 </li>
@@ -72,15 +73,15 @@ function App() {
         >
           <Routes>
             <Route
-              path="/"
+              path={Routes.Summary}
               element={
                 <TrackingDataProvider>
                   <TrackingDataHandler />
                 </TrackingDataProvider>
               }
             />
-            <Route path="/Trades" element={<TradesPage />} />
-            <Route path="/Logs" element={<LogsPage />} />
+            <Route path={Routes.Trades} element={<TradesPage />} />
+            <Route path={Routes.Logs} element={<LogsPage />} />
           </Routes>
         </LocalizationProvider>
       </div>

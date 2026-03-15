@@ -1,4 +1,3 @@
-import { appConfig } from "../../Config";
 import { React, useEffect, useState, useCallback, useRef } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import { TextField } from "@mui/material";
@@ -6,10 +5,11 @@ import { DatePicker } from "@mui/x-date-pickers";
 import { Autocomplete } from "@mui/material";
 import { IconButton } from "@mui/material";
 import { blue } from "@mui/material/colors";
-import dayjs from "dayjs";
 import Typography from "@mui/material/Typography";
 import clsx from "clsx";
 import ClearIcon from "@mui/icons-material/Clear";
+import { getTrades, getTradesCount, getSecurities, getSystemIds } from "../../api/tradingDataApi";
+import { currencyComparator, dateComparator } from "../../utils/comparators";
 
 export const TradesPage = () => {
   const [tradesData, setTradesData] = useState([]);
@@ -30,143 +30,59 @@ export const TradesPage = () => {
   const pageIndexRef = useRef(0);
   const pageSizeRef = useRef(20);
 
+  const fetchTrades = useCallback(async () => {
+    setLoading(true);
+    const filters = {
+      ...tradesFiltersRef.current,
+      pageIndex: pageIndexRef.current,
+      pageSize: pageSizeRef.current,
+    };
+    const [data, count] = await Promise.all([
+      getTrades(filters),
+      getTradesCount(filters),
+    ]);
+    setTradesData(Array.isArray(data) ? data : []);
+    setTradesCount(typeof count === 'number' ? count : 0);
+    setLoading(false);
+  }, []);
+
   const updateDateFrom = useCallback((e) => {
-    tradesFilters.dateFrom = e;
-    getTrades();
-    getTradesCount();
-  });
+    tradesFiltersRef.current.dateFrom = e;
+    fetchTrades();
+  }, [fetchTrades]);
 
   const updateDateTo = useCallback((e) => {
-    tradesFilters.dateTo = e;
-    getTrades();
-    getTradesCount();
-  });
+    tradesFiltersRef.current.dateTo = e;
+    fetchTrades();
+  }, [fetchTrades]);
 
   const updateSecurity = useCallback((e, v) => {
-    tradesFilters.securityId = v ? v.id : null;
-    getTrades();
-    getTradesCount();
-  });
+    tradesFiltersRef.current.securityId = v ? v.id : null;
+    fetchTrades();
+  }, [fetchTrades]);
 
   const updateSystem = useCallback((e, v) => {
-    tradesFilters.systemId = v ? v : null;
-    getTrades();
-    getTradesCount();
-  });
+    tradesFiltersRef.current.systemId = v ?? null;
+    fetchTrades();
+  }, [fetchTrades]);
 
   const setPaginationModel = useCallback((pg) => {
     pageIndexRef.current = pg.page;
     pageSizeRef.current = pg.pageSize;
-    getTrades();
-  }, []);
+    fetchTrades();
+  }, [fetchTrades]);
 
-  const getTradesCount = useCallback(async () => {
-    try {
-      const response = await fetch(
-        `${appConfig.TradingDataApiHost}/TradingData/TradesCount`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            SystemId: tradesFilters.systemId,
-            SecurityId: tradesFilters.securityId,
-            DateFrom: tradesFilters.dateFrom,
-            DateTo: tradesFilters.dateTo,
-            PageIndex: pageIndexRef.current,
-            PageSize: pageSizeRef.current,
-          }),
-        }
-      );
-      const count = await response.json();
-      setTradesCount(count);
-    } catch {
-      setTradesCount(0);
-    }
-  }, []);
+  useEffect(() => {
+    fetchTrades();
+  }, [fetchTrades]);
 
-  const getTrades = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${appConfig.TradingDataApiHost}/TradingData/Trades`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            SystemId: tradesFilters.systemId,
-            SecurityId: tradesFilters.securityId,
-            DateFrom: tradesFilters.dateFrom,
-            DateTo: tradesFilters.dateTo,
-            PageIndex: pageIndexRef.current,
-            PageSize: pageSizeRef.current,
-          }),
-        }
-      );
-      const newData = await response.json();
-      setTradesData(newData);
-    } catch (err) {
-      setTradesData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const getSecurities = useCallback(async () => {
-    const response = await fetch(
-      `${appConfig.TradingDataApiHost}/TradingData/Securities`,
-      {
-        method: "GET",
-      }
-    );
-    const secs = await response.json();
-    setSecurities(
-      Array.from(
-        secs
-          .filter((x) => x.exchange === "MOEX" || x.exchange === "SPBEX")
-          .map(({ id, ticker }) => {
-            return { id: id, label: ticker };
-          })
-      )
-    );
-  }, []);
-
-  const getSystems = useCallback(async () => {
-    const response = await fetch(
-      `${appConfig.TradingDataApiHost}/TradingData/Trades/SystemIds`,
-      {
-        method: "GET",
-      }
-    );
-    const secs = await response.json();
-    setSystems(Array.isArray(secs) ? secs : []);
+  useEffect(() => {
+    getSecurities().then(setSecurities);
   }, []);
 
   useEffect(() => {
-    getTradesCount();
-    getTrades();
+    getSystemIds().then(setSystems);
   }, []);
-  useEffect(() => {
-    getSecurities();
-  }, []);
-  useEffect(() => {
-    getSystems();
-  }, []);
-
-  const dateComparator = (v1, v2) => {
-    let val1 = dayjs(v1, "DD.MM.YYYY");
-    let val2 = dayjs(v2, "DD.MM.YYYY");
-    return val1 - val2;
-  };
-
-  const currencyComparator = (v1, v2) => {
-    let val1 = parseFloat(v1.replace(",", "."));
-    let val2 = parseFloat(v2.replace(",", "."));
-    return val1 - val2;
-  };
 
   const columns = [
     {
